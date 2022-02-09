@@ -1,7 +1,10 @@
 ﻿using System.Data.SqlClient;
+using System.Configuration;
+using System;
 
 namespace SingletonSQLCnn
 {
+
     public class SingletonDatabase
     {
         // Paso 1: Hacer privado el contructor
@@ -14,8 +17,8 @@ namespace SingletonSQLCnn
         // Para manejar hilos multiples usamos un objeto para sicronizar los hilos durante el primer acceso al singleton
         private static readonly object _syncObject = new object();
         
-        const string strCnn = @"Server=.,14033;Database=SchoolAdmin;User Id=sa;Password=Admin4dm1n!;";
- 
+        //const string strCnn = @"Server=.,14033;Database=SchoolAdmin;User Id=sa;Password=Admin4dm1n!;";
+
         // Paso 3: Regresa la instancia, si no existe crea una nueva.
         public static SqlConnection getConnection {
             get
@@ -26,7 +29,22 @@ namespace SingletonSQLCnn
                     {
                         if (_instance == null)
                         {
-                            _instance = new SqlConnection(strCnn);
+                            string environment = ConfigMan.ReadSetting("environment");
+                            string strConnectionSettings = "";
+                            //ReadAllSettings();
+                            switch (environment.ToLower() )
+                            {
+                                case "dev": strConnectionSettings = ConfigMan.ReadSetting("connectuionStringDev"); 
+                                    break;
+                                case "qa": strConnectionSettings = ConfigMan.ReadSetting("connectuionStringQA"); 
+                                    break;
+                                case "prod": strConnectionSettings = ConfigMan.ReadSetting("connectuionStringProd"); 
+                                    break;
+                                default:
+                                    break;
+                            }
+                            
+                            _instance = new SqlConnection(strConnectionSettings);
                         }
                     }
                 }
@@ -44,6 +62,7 @@ namespace SingletonSQLCnn
             if (_instance != null)
                 _instance.Close();
         }
+
     }
 
 }
